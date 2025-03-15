@@ -1,0 +1,33 @@
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: thebeans
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - thebeans-network
+
+  api:
+    build:
+      context: .
+      dockerfile: src/TheBeans.Api/Dockerfile
+    ports:
+      - "5001:80"
+    environment:
+      ConnectionStrings__Default: "Host=db;Database=thebeans;Username=admin;Password=admin"
+    depends_on:
+      - db
+    networks:
+      - thebeans-network
+
+volumes:
+  pgdata:
+
+networks:
+  thebeans-network:
