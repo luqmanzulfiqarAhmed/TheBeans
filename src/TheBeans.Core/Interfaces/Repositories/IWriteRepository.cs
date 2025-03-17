@@ -1,7 +1,6 @@
-﻿using System;
-namespace TheBeans.Core.Interfaces.Repositories
+﻿namespace TheBeans.Core.Interfaces.Repositories
 {
-public interface IWriteRepository<T> where T : class
+    public interface IWriteRepository<T> where T : class
 {
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);

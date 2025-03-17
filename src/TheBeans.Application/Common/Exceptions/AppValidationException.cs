@@ -1,5 +1,3 @@
-
-using FluentValidation.Results;
 using TheBeans.Application.Common.Responses;
 
 namespace TheBeans.Application.Common.Exceptions

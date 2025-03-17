@@ -1,6 +1,4 @@
-﻿using System;
-using MediatR;
-using TheBeans.Core.Common;
+﻿using MediatR;
 
 namespace TheBeans.Application.Features.CoffeeBeans.Commands.CreateCoffeeBean
 {

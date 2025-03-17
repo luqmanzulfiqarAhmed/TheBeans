@@ -1,5 +1,4 @@
-﻿using System;
-using TheBeans.Application.Common.Responses;
+﻿using TheBeans.Application.Common.Responses;
 
 namespace TheBeans.Application.Features.CoffeeBeans.Commands.CreateCoffeeBean
 {

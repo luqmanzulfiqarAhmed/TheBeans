@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace TheBeans.Core.Common;
+﻿namespace TheBeans.Core.Common;
 
 public class Result<T>
 {

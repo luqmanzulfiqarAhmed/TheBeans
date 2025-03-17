@@ -1,11 +1,8 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TheBeans.Core.Common
 {
-	public abstract class BaseEntity
+    public abstract class BaseEntity
 	{
 
 		[Key]

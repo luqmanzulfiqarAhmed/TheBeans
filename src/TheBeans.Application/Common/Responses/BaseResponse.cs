@@ -1,7 +1,6 @@
-﻿using System;
-namespace TheBeans.Application.Common.Responses
+﻿namespace TheBeans.Application.Common.Responses
 {
-     /// <summary>
+    /// <summary>
     /// Base response class that serves as a standard response structure for application requests.
     /// </summary>
     public class BaseResponse
