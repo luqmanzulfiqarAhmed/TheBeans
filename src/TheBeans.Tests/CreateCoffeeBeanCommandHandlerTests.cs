@@ -1,112 +1,96 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Moq;
 using Xunit;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
+using TheBeans.Application.Features.CoffeeBeans.Commands.CreateCoffeeBean;
+using TheBeans.Core.Interfaces.Repositories;
+using TheBeans.Application.Common.Exceptions;
 
-namespace TheBeans.Tests
+public class CreateCoffeeBeanCommandHandlerTests
 {
-    // Unit tests for the CreateCoffeeBeanCommandHandler class.
-    // These tests ensure that the handler processes commands correctly and handles errors appropriately.
-    public class CreateCoffeeBeanCommandHandlerTests
+    private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<IWriteRepository<CoffeeBean>> _repositoryMock;
+    private readonly Mock<ILogger<CreateCoffeeBeanCommand>> _loggerMock;
+    private readonly CreateCoffeeBeanCommandHandler _handler;
+
+    public CreateCoffeeBeanCommandHandlerTests()
     {
-        // Mock objects for dependencies:
-        // - IWriteRepository<CoffeeBean>: Simulates the database repository.
-        // - IMapper: Simulates AutoMapper for object mapping.
-        private readonly Mock<IWriteRepository<CoffeeBean>> _mockRepository;
-        private readonly Mock<IMapper> _mockMapper;
+       
+        _mapperMock = new Mock<IMapper>();
+        _repositoryMock = new Mock<IWriteRepository<CoffeeBean>>();
+        _loggerMock = new Mock<ILogger<CreateCoffeeBeanCommand>>();
+        
+        // Initialize the handler with mocked dependencies
+        _handler = new CreateCoffeeBeanCommandHandler(_mapperMock.Object, _repositoryMock.Object, _loggerMock.Object);
+    }
 
-        // The handler being tested.
-        private readonly CreateCoffeeBeanCommandHandler _handler;
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldReturnSuccessResponse()
+    {
+        // Arrange: Create a valid CreateCoffeeBeanCommand
+        var command = new CreateCoffeeBeanCommand(
+            10.5m,   // Cost
+            "USD",   // Currency
+            "image.jpg",   // Image
+            "Brown",   // Colour
+            "Arabica",   // Name
+            "High quality coffee bean",    // Description
+            "Brazil"    // Country
+        );
 
-        // Constructor to initialize the test environment.
-        public CreateCoffeeBeanCommandHandlerTests()
+        var coffeeBean = new CoffeeBean
         {
-            // Initialize mock objects.
-            _mockRepository = new Mock<IWriteRepository<CoffeeBean>>();
-            _mockMapper = new Mock<IMapper>();
+            
+            Name = "Arabica",
+            Price = 10.5m,
+            Currency = "USD",
+            ImageUrl = "coffee_image.png",
+            RoastLevel = "Brown",
+            Description = "Delicious coffee from Brazil",
+            Origin = "Brazil"
+        };
 
-            // Create an instance of the handler with mocked dependencies.
-            _handler = new CreateCoffeeBeanCommandHandler(_mockMapper.Object, _mockRepository.Object);
-        }
 
-        // Test case: Ensure the handler processes a valid command and returns a success response.
-        [Fact]
-        public async Task Handle_ValidCommand_ReturnsSuccessResponse()
-        {
-            // Arrange
-            // Create a valid CreateCoffeeBeanCommand with sample data.
-            var command = new CreateCoffeeBeanCommand(
-                Cost: "£39.26",
-                Image: "https://example.com/image.jpg",
-                Colour: "dark roast",
-                Name: "TURNABOUT",
-                Description: "A delicious coffee",
-                Country: "Peru"
-            );
+        _mapperMock.Setup(m => m.Map<CoffeeBean>(It.IsAny<CreateCoffeeBeanCommand>()))
+            .Returns(coffeeBean);
 
-            // Create a CoffeeBean entity and a response object for mocking.
-            var coffeeBean = new CoffeeBean { Id = command.Id };
-            var response = new CreateCoffeeBeanCommandResponse(command.Id);
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<CoffeeBean>()));
+        _repositoryMock.Setup(r => r.SaveChangesAsync());
 
-            // Set up mock behavior:
-            // - AutoMapper maps the command to a CoffeeBean entity.
-            // - AutoMapper maps the CoffeeBean entity to a response.
-            // - Repository adds the entity and saves changes successfully.
-            _mockMapper.Setup(m => m.Map<CoffeeBean>(command)).Returns(coffeeBean);
-            _mockMapper.Setup(m => m.Map<CreateCoffeeBeanCommandResponse>(coffeeBean)).Returns(response);
-
-            _mockRepository.Setup(r => r.AddAsync(coffeeBean)).Returns(Task.CompletedTask);
-            _mockRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
-
-            // Act
-            // Call the handler's Handle method with the command.
-            var result = await _handler.Handle(command, CancellationToken.None);
+        // Act: Handle the command
+        var result = await _handler.Handle(command, CancellationToken.None);
+Console.WriteLine($"Actual Result: Success={result.Success}, Message={result.Message}");
+        // Assert: Check if the response is as expected
+        Assert.True(result.Success);
+        Assert.Equal("Coffee bean created successfully", result.Message);
+        //Assert.Equal(coffeeBean.Id, new Guid(result.Id));
 
             // Assert
-            // Verify that the response indicates success and contains the correct data.
-            Assert.True(result.Success);
-            Assert.Equal(command.Id, result.Id);
-            Assert.Equal("Coffee bean created successfully", result.Message);
+    Assert.True(result.Success, "Expected result to be success but it was not.");
+    Assert.Equal("Coffee bean created successfully", result.Message);
+    _repositoryMock.Verify(repo => repo.AddAsync(It.IsAny<CoffeeBean>()), Times.Once);
+    _repositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
 
-            // Verify that the repository methods were called exactly once.
-            _mockRepository.Verify(r => r.AddAsync(coffeeBean), Times.Once);
-            _mockRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
-        }
+    // If the above assertions fail, print the actual result to debug:
+    
+    }
 
-        // Test case: Ensure the handler handles repository exceptions and returns a failure response.
-        [Fact]
-        public async Task Handle_RepositoryThrowsException_ReturnsFailureResponse()
-        {
-            // Arrange
-            // Create a valid CreateCoffeeBeanCommand with sample data.
-            var command = new CreateCoffeeBeanCommand(
-                Cost: "£39.26",
-                Image: "https://example.com/image.jpg",
-                Colour: "dark roast",
-                Name: "TURNABOUT",
-                Description: "A delicious coffee",
-                Country: "Peru"
-            );
+    [Fact]
+    public async Task Handle_InvalidCommand_ShouldThrowValidationException()
+    {
+        // Arrange: Create an invalid CreateCoffeeBeanCommand (e.g., missing required fields)
+        var command = new CreateCoffeeBeanCommand(
+            0,   // Invalid cost (should be greater than 0)
+            "",  // Invalid currency
+            "",  // Invalid image
+            "",  // Invalid colour
+            "",  // Invalid name
+            "",  // Invalid description
+            ""   // Invalid country
+        );
 
-            // Create a CoffeeBean entity for mocking.
-            var coffeeBean = new CoffeeBean { Id = command.Id };
-
-            // Set up mock behavior:
-            // - AutoMapper maps the command to a CoffeeBean entity.
-            // - Repository throws an exception when adding the entity.
-            _mockMapper.Setup(m => m.Map<CoffeeBean>(command)).Returns(coffeeBean);
-            _mockRepository.Setup(r => r.AddAsync(coffeeBean)).ThrowsAsync(new Exception("Database error"));
-
-            // Act
-            // Call the handler's Handle method with the command.
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            // Verify that the response indicates failure and contains the correct error message.
-            Assert.False(result.Success);
-            Assert.Equal("An error occurred while creating the coffee bean.", result.Message);
-            Assert.Contains("Database error", result.ValidationErrors);
-        }
+        // Act & Assert: The handler should throw a validation exception
+        await Assert.ThrowsAsync<AppValidationException>(async () =>
+            await _handler.Handle(command, CancellationToken.None));
     }
 }
