@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 using TheBeans.Application.Features.CoffeeBeans.Commands.CreateCoffeeBean;
 using TheBeans.Core.Interfaces.Repositories;
 using TheBeans.Application.Common.Exceptions;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class CreateCoffeeBeanCommandHandlerTests
 {
@@ -15,11 +18,10 @@ public class CreateCoffeeBeanCommandHandlerTests
 
     public CreateCoffeeBeanCommandHandlerTests()
     {
-       
         _mapperMock = new Mock<IMapper>();
         _repositoryMock = new Mock<IWriteRepository<CoffeeBean>>();
         _loggerMock = new Mock<ILogger<CreateCoffeeBeanCommand>>();
-        
+
         // Initialize the handler with mocked dependencies
         _handler = new CreateCoffeeBeanCommandHandler(_mapperMock.Object, _repositoryMock.Object, _loggerMock.Object);
     }
@@ -27,20 +29,19 @@ public class CreateCoffeeBeanCommandHandlerTests
     [Fact]
     public async Task Handle_ValidCommand_ShouldReturnSuccessResponse()
     {
-        // Arrange: Create a valid CreateCoffeeBeanCommand
+        // Arrange
         var command = new CreateCoffeeBeanCommand(
-            10.5m,   // Cost
+            10.5m,  // Cost
             "USD",   // Currency
-            "image.jpg",   // Image
-            "Brown",   // Colour
-            "Arabica",   // Name
-            "High quality coffee bean",    // Description
-            "Brazil"    // Country
+            "image.jpg",
+            "Brown",
+            "Arabica",
+            "High quality coffee bean",
+            "Brazil"
         );
 
         var coffeeBean = new CoffeeBean
         {
-            
             Name = "Arabica",
             Price = 10.5m,
             Currency = "USD",
@@ -50,46 +51,51 @@ public class CreateCoffeeBeanCommandHandlerTests
             Origin = "Brazil"
         };
 
+        // Ensure AutoMapper correctly maps the command to CoffeeBean
+_mapperMock
+    .Setup(m => m.Map<CoffeeBean>(It.IsAny<CreateCoffeeBeanCommand>()))
+    .Returns((CreateCoffeeBeanCommand command) => new CoffeeBean
+    {
+        Name = command.Name,
+        Price = command.Cost,
+        Currency = command.Currency,
+        ImageUrl = command.Image,
+        RoastLevel = command.Colour,
+        Description = command.Description,
+        Origin = command.Country
+    });
 
-        _mapperMock.Setup(m => m.Map<CoffeeBean>(It.IsAny<CreateCoffeeBeanCommand>()))
-            .Returns(coffeeBean);
+        // Ensure repository methods are awaited properly
+        _repositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<CoffeeBean>()))
+            .Returns(Task.CompletedTask);
 
-        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<CoffeeBean>()));
-        _repositoryMock.Setup(r => r.SaveChangesAsync());
+        _repositoryMock
+            .Setup(r => r.SaveChangesAsync())
+            .Returns(Task.CompletedTask);
 
-        // Act: Handle the command
+        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
-Console.WriteLine($"Actual Result: Success={result.Success}, Message={result.Message}");
-        // Assert: Check if the response is as expected
-        Assert.True(result.Success);
+
+        // Debugging output
+        Console.WriteLine($"Actual Result: Success={result.Success}, Message={result.Message}");
+
+        // Assert
+        Assert.True(result.Success, "Expected result to be success but it was not.");
         Assert.Equal("Coffee bean created successfully", result.Message);
-        //Assert.Equal(coffeeBean.Id, new Guid(result.Id));
-
-            // Assert
-    Assert.True(result.Success, "Expected result to be success but it was not.");
-    Assert.Equal("Coffee bean created successfully", result.Message);
-    _repositoryMock.Verify(repo => repo.AddAsync(It.IsAny<CoffeeBean>()), Times.Once);
-    _repositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
-
-    // If the above assertions fail, print the actual result to debug:
-    
+        _repositoryMock.Verify(repo => repo.AddAsync(It.IsAny<CoffeeBean>()), Times.Once);
+        _repositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
     }
 
     [Fact]
     public async Task Handle_InvalidCommand_ShouldThrowValidationException()
     {
-        // Arrange: Create an invalid CreateCoffeeBeanCommand (e.g., missing required fields)
+        // Arrange
         var command = new CreateCoffeeBeanCommand(
-            0,   // Invalid cost (should be greater than 0)
-            "",  // Invalid currency
-            "",  // Invalid image
-            "",  // Invalid colour
-            "",  // Invalid name
-            "",  // Invalid description
-            ""   // Invalid country
+            0, "", "", "", "", "", ""  // Invalid values
         );
 
-        // Act & Assert: The handler should throw a validation exception
+        // Act & Assert
         await Assert.ThrowsAsync<AppValidationException>(async () =>
             await _handler.Handle(command, CancellationToken.None));
     }

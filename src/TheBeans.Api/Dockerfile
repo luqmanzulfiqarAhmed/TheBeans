@@ -10,6 +10,7 @@ COPY src/TheBeans.Core/*.csproj src/TheBeans.Core/
 COPY src/TheBeans.Application/*.csproj src/TheBeans.Application/
 COPY src/TheBeans.Infrastructure/*.csproj src/TheBeans.Infrastructure/
 COPY src/TheBeans.Api/*.csproj src/TheBeans.Api/
+COPY src/TheBeans.Tests/*.csproj src/TheBeans.Tests/ 
 
 # Restore dependencies
 RUN dotnet restore "TheBeans.sln"

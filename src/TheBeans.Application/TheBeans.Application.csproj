@@ -17,6 +17,10 @@
 
   <!-- Logging -->
   <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+
+  <!-- EntityFrameworkCore -->
+  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
+
 </ItemGroup>
 
   <ItemGroup>
