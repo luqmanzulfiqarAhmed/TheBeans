@@ -11,7 +11,7 @@ using TheBeans.Core.Entities;
 using TheBeans.Core.Interfaces.Repositories;
 using TheBeans.Core.Interfaces.Services;
 
-namespace TheBeans.Application.Tests
+namespace TheBeans.Tests
 {
     public class GetCoffeeBeansQueryHandlerTests
     {

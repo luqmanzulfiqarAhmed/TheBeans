@@ -9,6 +9,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace TheBeans.Tests
+{
 public class CreateCoffeeBeanCommandHandlerTests
 {
     private readonly Mock<IMapper> _mapperMock;
@@ -99,4 +101,6 @@ _mapperMock
         await Assert.ThrowsAsync<AppValidationException>(async () =>
             await _handler.Handle(command, CancellationToken.None));
     }
+}
+
 }
