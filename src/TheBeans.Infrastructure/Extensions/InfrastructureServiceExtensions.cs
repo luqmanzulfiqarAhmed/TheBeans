@@ -5,6 +5,7 @@ using TheBeans.Core.Interfaces.Repositories;
 using TheBeans.Core.Interfaces.Services;
 using TheBeans.Infrastructure.Data;
 using TheBeans.Infrastructure.Repositories;
+using TheBeans.Infrastructure.Scheduler;
 using TheBeans.Infrastructure.Services;
 
 namespace TheBeans.Infrastructure.Extensions
@@ -23,6 +24,8 @@ namespace TheBeans.Infrastructure.Extensions
 
             // Register domain services.
             services.AddScoped<IDailyBeanService, DailyBeanService>();
+
+            services.AddQuartzServices(); // Add Quartz Scheduler
 
             return services;
         }
