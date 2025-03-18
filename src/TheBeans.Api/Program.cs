@@ -5,11 +5,11 @@ using TheBeans.Api.Extensions;
 using TheBeans.Application.Extensions;
 using TheBeans.Infrastructure.Data;
 using TheBeans.Infrastructure.Extensions;
- 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register API-specific services.
-builder.Services.AddApiServices(); 
+builder.Services.AddApiServices();
 
 
 builder.Services.AddApplicationServices();
@@ -33,7 +33,12 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate(); // Auto-migrate on startup
+
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
+
+
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

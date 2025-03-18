@@ -25,6 +25,9 @@ namespace TheBeans.Infrastructure.Extensions
             // Register domain services.
             services.AddScoped<IDailyBeanService, DailyBeanService>();
 
+            // Register the DatabaseSeeder service
+            services.AddTransient<DatabaseSeeder>();
+
             services.AddQuartzServices(); // Add Quartz Scheduler
 
             return services;
