@@ -2,6 +2,7 @@
 services:
   db:
     image: postgres:latest
+    container_name: thebeans-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -13,21 +14,42 @@ services:
     networks:
       - thebeans-network
 
-  api:
+  migrate:
     build:
       context: .
       dockerfile: src/TheBeans.Api/Dockerfile
-    ports:
-      - "5001:80"
+    image: thebeans-migrate
+    container_name: thebeans-migrate
+    command: >
+      sh -c "dotnet ef database update --startup-project TheBeans.Api.dll --migrations-assembly TheBeans.Infrastructure"
     environment:
-      ConnectionStrings__Default: "Host=db;Database=thebeans;Username=admin;Password=admin"
+      - ConnectionStrings__Default=Host=db;Database=thebeans;Username=admin;Password=admin
     depends_on:
       - db
     networks:
       - thebeans-network
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: src/TheBeans.Api/Dockerfile
+    image: thebeans-api
+    container_name: thebeans-api
+    ports:
+      - "5001:80"
+    environment:
+      - ConnectionStrings__Default=Host=db;Database=thebeans;Username=admin;Password=admin
+    depends_on:
+      - db
+      - migrate
+    networks:
+      - thebeans-network
+    restart: always
 
 volumes:
   pgdata:
 
 networks:
   thebeans-network:
+    driver: bridge

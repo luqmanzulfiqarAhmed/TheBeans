@@ -1,35 +1,56 @@
-# Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Use the official .NET SDK image for the build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Set up the working directory
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["TheBeans.sln", "."]
-COPY ["src/TheBeans.Core/*.csproj", "src/TheBeans.Core/"]
-COPY ["src/TheBeans.Application/*.csproj", "src/TheBeans.Application/"]
-COPY ["src/TheBeans.Infrastructure/*.csproj", "src/TheBeans.Infrastructure/"]
-COPY ["src/TheBeans.Api/*.csproj", "src/TheBeans.Api/"]
+# Copy the solution and project files
+COPY TheBeans.sln ./
+COPY src/TheBeans.Core/*.csproj src/TheBeans.Core/
+COPY src/TheBeans.Application/*.csproj src/TheBeans.Application/
+COPY src/TheBeans.Infrastructure/*.csproj src/TheBeans.Infrastructure/
+COPY src/TheBeans.Api/*.csproj src/TheBeans.Api/
+COPY src/TheBeans.Tests/*.csproj src/TheBeans.Tests/ 
 
 # Restore dependencies
 RUN dotnet restore "TheBeans.sln"
 
-# Copy all source code
+# Copy the entire code
 COPY . .
 
-# Build the API
-WORKDIR "/src/src/TheBeans.Api"
-RUN dotnet build -c Release -o /app/build
+# Install dotnet-ef tool
+RUN dotnet tool install --global dotnet-ef
 
-# Stage 2: Publish
-FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
+# Build the application
+RUN dotnet build "TheBeans.sln" -c Release -o /app/build
 
-# Stage 3: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+# Publish the application
+RUN dotnet publish "TheBeans.sln" -c Release -o /app/publish
+
+# Use the official .NET runtime image for the final image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+
+# Set the working directory
 WORKDIR /app
-COPY --from=publish /app/publish .
 
-# Entrypoint script to run migrations and start the app
-COPY ["entrypoint.sh", "./"]
+# Ensure the application listens on port 80
+ENV ASPNETCORE_URLS=http://+:80
+
+# Copy the published files from the build stage
+COPY --from=build /app/publish .
+
+# Install netcat for the entrypoint script and clean up apt-get lists
+RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
+# Copy the dotnet-ef tool from the build stage
+COPY --from=build /root/.dotnet/tools /root/.dotnet/tools
+
+# Add dotnet tools to PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Copy the entrypoint script and make it executable
+COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
+# Start the application
 ENTRYPOINT ["./entrypoint.sh"]

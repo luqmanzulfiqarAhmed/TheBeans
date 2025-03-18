@@ -1,7 +1,6 @@
-﻿using System;
-namespace TheBeans.Core.Interfaces.Services
+﻿namespace TheBeans.Core.Interfaces.Services
 {
-public interface IDailyBeanService
+    public interface IDailyBeanService
 {
     Task<CoffeeBean> SelectBeanOfTheDayAsync();
     Task<CoffeeBean?> GetCurrentBeanOfTheDayAsync();

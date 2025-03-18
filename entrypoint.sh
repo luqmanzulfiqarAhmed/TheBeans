@@ -1,13 +1,12 @@
 #!/bin/sh
 
-# Wait for PostgreSQL to be ready
-until pg_isready -h db -p 5432 -U admin; do
-  echo "Waiting for PostgreSQL..."
-  sleep 2
+# Wait for the database to be ready
+echo "Waiting for PostgreSQL to start..."
+while ! nc -z db 5432; do
+  sleep 1
 done
-
-# Run EF Core migrations
-dotnet ef database update --project ../TheBeans.Infrastructure
+echo "PostgreSQL started."
 
 # Start the application
-exec dotnet TheBeans.Api.dll
+echo "Starting the application..."
+dotnet TheBeans.Api.dll
