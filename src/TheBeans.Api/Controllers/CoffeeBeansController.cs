@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TheBeans.Application.Features.CoffeeBeans.Commands.CreateCoffeeBean;
 using TheBeans.Application.Features.CoffeeBeans.Commands.DeleteCoffeeBean;
 using TheBeans.Application.Features.CoffeeBeans.Commands.UpdateCoffeeBean;
+using TheBeans.Application.Features.CoffeeBeans.Queries.CoffeeBeansSearch;
 using TheBeans.Application.Features.CoffeeBeans.Queries.GetCoffeeBeans;
 
 namespace TheBeans.Api.Controllers
@@ -45,6 +46,15 @@ namespace TheBeans.Api.Controllers
         [Route("CoffeeBean/GetAll")]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] GetCoffeeBeansQuery query)
+        {
+            var response = await _mediator.Send(query);
+            return Ok(response);
+        }
+
+
+        [Route("CoffeeBean/SearchCoffeeBean")]
+        [HttpGet]
+        public async Task<IActionResult> SearchCoffeeBean([FromQuery] SearchCoffeeBeansQuery query)
         {
             var response = await _mediator.Send(query);
             return Ok(response);

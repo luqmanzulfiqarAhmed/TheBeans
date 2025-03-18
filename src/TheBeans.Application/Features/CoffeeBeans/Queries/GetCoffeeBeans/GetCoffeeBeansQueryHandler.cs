@@ -50,21 +50,17 @@ namespace TheBeans.Application.Features.CoffeeBeans.Queries.GetCoffeeBeans
             // Get all coffee beans from the database
             var coffeeBeans = await _readRepository.GetAllAsync();
 
-            // Get the history of the "Bean of the Day"
-            var beanOfTheDay = await _coffeeBeanService.GetBeanOfTheDayHistoryAsync();
+            // Get the current "Bean of the Day"
+            var beanOfTheDay = await _coffeeBeanService.GetCurrentBeanOfTheDayAsync();
 
             // Map the coffee beans to DTOs
             var coffeeBeanDtos = _mapper.Map<List<CoffeeBeanDto>>(coffeeBeans);
 
-            // Flag coffee beans that are in the "Bean of the Day" history
-            coffeeBeanDtos = coffeeBeanDtos
-                .Select(dto =>
-                {
-                    // Set IsBOTD flag based on whether the bean exists in the Bean of the Day history
-                    dto.IsBOTD = beanOfTheDay.Any(b => b.Id == new Guid(dto.Id));
-                    return dto; // Return the updated DTO
-                })
-                .ToList();
+            // Flag coffee beans that match the "Bean of the Day"
+            foreach (var dto in coffeeBeanDtos)
+            {
+                dto.IsBOTD = beanOfTheDay != null && new Guid(dto.Id) == beanOfTheDay.Id;
+            }
 
             // Return the list of DTOs
             return coffeeBeanDtos;
