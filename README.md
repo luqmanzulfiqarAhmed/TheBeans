@@ -17,3 +17,15 @@ The TheBeans project follows Clean Architecture with CQRS to ensure modularity, 
 - xUnit & Moq: Ensures unit testing coverage and reliable mocking of dependencies.
 
 These choices enhance maintainability, scalability, and testability, aligning with industry best practices.
+
+The application is Dockerised and uses PostgreSQL as the database.
+
+**Running the Solution**
+
+Clone the Repository:
+git clone https://github.com/luqmanzulfiqarAhmed/TheBeans.git
+cd TheBeans
+
+Run the Application (Dockerised):
+docker-compose up --build
+
